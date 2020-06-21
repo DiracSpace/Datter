@@ -22,6 +22,6 @@ Just type the following:
 
 # Snapshots
 <p align="center">
-  <img width="460" height="300" src="https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatible.png">
-  <img width="460" height="300" src="https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatibleNotFound.png">
+  <img src="https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatible.png">
+  <img src="https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatibleNotFound.png">
 </p>
