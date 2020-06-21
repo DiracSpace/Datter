@@ -13,7 +13,7 @@ Then, we will specify that it's gonna be an executable shell script and add it t
 # Usage
 Just type the following:
 
-`$ mfetch`
+`$ datter`
 
 # Dependencies
 * Obviously, you need `bash`
