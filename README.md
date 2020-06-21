@@ -21,6 +21,7 @@ Just type the following:
 * `playerctl`
 
 # Snapshots
-Solarized dark             |  Solarized Ocean
-:-------------------------:|:-------------------------:
-![](https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatible.png)  |  ![](https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatibleNotFound.png)
+<p align="center">
+  <img width="460" height="300" src="https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatible.png">
+  <img width="460" height="300" src="https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatibleNotFound.png">
+</p>
