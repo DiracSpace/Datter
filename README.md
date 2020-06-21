@@ -19,3 +19,6 @@ Just type the following:
 * Obviously, you need `bash`
 * `coreutils`
 * `playerctl`
+
+# Snapshots
+![alt-text-1](https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatible.png "title-1") ![alt-text-2](https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatibleNotFound.png "title-2")
