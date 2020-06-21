@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+cat << "EOF"
+    o                               
+    O                                
+    o          O    O                
+    o         oOo  oOo               
+.oOoO  .oOoO'  o    o   .oOo. `OoOo. 
+o   O  O   o   O    O   OooO'  o     
+O   o  o   O   o    o   O      O     
+`OoO'o `OoO'o  `oO  `oO `OoO'  o   
+
+EOF
+
+date=$(date +'%Y-%m-%d %H:%M:%S')
+
+# get system information
+rootuser=$(who | awk '!seen[$1]++ {print $1}')
+host=$(hostname)
+arch=$(hostnamectl | grep Architecture | sed 's/^.*: //')
+os=$(hostnamectl | grep Operating | sed 's/^.*: //')
+kernel=$(hostnamectl | grep Kernel | sed 's/^.*: //')
+space=$(df -h | awk '/\/$/ {print $3 "/" $2 " (" $5 ")"}')
+term=$(basename "${SHELL}")
+
+# get other data
+function getMusicData {
+	{
+		player=$(playerctl -l 2>/dev/null) &&
+		author=$(playerctl -p $player metadata xesam:albumArtist 2>/dev/null)
+		song=$(playerctl -p $player metadata xesam:title 2>/dev/null)
+		album=$(playerctl -p $player metadata xesam:album 2>/dev/null)
+	} || {
+		echo "Did not find a compatible player, sorry"
+	}
+}
+
+getMusicData
+
+printf "
+\e[34m user    \e[0m%s
+\e[34m host    \e[0m%s
+\e[34m OS      \e[0m%s
+\e[34m Kernel  \e[0m%s
+\e[34m Shell   \e[0m%s
+\e[34m Arch    \e[0m%s
+\e[34m Disk    \e[0m%s
+\e[34m ------  \e[0m%s
+\e[34m Audio   \e[0m%s
+\e[34m Author  \e[0m%s
+\e[34m Album   \e[0m%s
+\e[34m Song    \e[0m%s
+\e[34m ------  \e[0m%s
+\e[34m /  \e[0m%s\n\n" \
+"${rootuser}" "${host}" "${os}" "${kernel}" "${term}" "${arch}" "${space}" "" "${player}" "${author}" "${album}" "${song}" "${date}"
