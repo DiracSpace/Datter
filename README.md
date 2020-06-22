@@ -19,3 +19,9 @@ Just type the following:
 * Obviously, you need `bash`
 * `coreutils`
 * `playerctl`
+
+# Snapshots
+<p align="center">
+  <img src="https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatible.png">
+  <img src="https://github.com/DiracSpace/Datter/blob/master/screenshots/datterCompatibleNotFound.png">
+</p>

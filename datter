@@ -1,32 +1,72 @@
 #!/usr/bin/env bash
 
 cat << "EOF"
-    o                               
-    O                                
-    o          O    O                
-    o         oOo  oOo               
-.oOoO  .oOoO'  o    o   .oOo. `OoOo. 
-o   O  O   o   O    O   OooO'  o     
-O   o  o   O   o    o   O      O     
-`OoO'o `OoO'o  `oO  `oO `OoO'  o   
+	    o                               
+	    O                                
+	    o          O    O                
+	    o         oOo  oOo               
+	.oOoO  .oOoO'  o    o   .oOo. `OoOo. 
+	o   O  O   o   O    O   OooO'  o     
+	O   o  o   O   o    o   O      O     
+	`OoO'o `OoO'o  `oO  `oO `OoO'  o   
 
 EOF
 
+# date
 date=$(date +'%Y-%m-%d %H:%M:%S')
 
-# get system information
+# user
 rootuser=$(who | awk '!seen[$1]++ {print $1}')
-host=$(hostname)
-arch=$(hostnamectl | grep Architecture | sed 's/^.*: //')
-os=$(hostnamectl | grep Operating | sed 's/^.*: //')
-kernel=$(hostnamectl | grep Kernel | sed 's/^.*: //')
-space=$(df -h | awk '/\/$/ {print $3 "/" $2 " (" $5 ")"}')
-term=$(basename "${SHELL}")
+
+# get uptime
+ttl=$(uptime -p)
+
+# get hardware data
+function getHardware {
+	{
+		gpu=$(lspci | grep VGA | sed 's/^.*: //')
+		cpu=$(cat /proc/cpuinfo | grep -m 1 "model name" | sed 's/^.*: //')
+		cpuCores=$(cat /proc/cpuinfo | grep processor | wc -l)
+		cpucoreTmp=$(echo $(paste <(cat /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp) | column -s $'\t' -t | sed 's/\(.\)..$/.\1°C/') | tr '\n' '\t')
+		disk=$(df -h --output=source,fstype,size,used,avail,pcent,target -x tmpfs -x devtmpfs | grep -m 1 /)
+		space=$(df -h | awk '/\/$/ {print $3 "/" $2 " (" $5 ")"}')
+		disktmp=$(sudo hddtemp /dev/sda | sed 's/^.*: //')
+		ram=$(free -h | grep -m 1 Mem)
+                term=$(basename "${SHELL}")
+	} || {
+		echo "Possible error with dependencies. please check if all of them are installed"
+	}
+}
+
+# get system information
+function getHostnameEssentials {
+	{
+		host=$(hostname)
+		arch=$(hostnamectl | grep Architecture | sed 's/^.*: //')
+		os=$(hostnamectl | grep Operating | sed 's/^.*: //')
+		kernel=$(hostnamectl | grep Kernel | sed 's/^.*: //')
+	} || {
+		echo "Error with hostnamectl, might wanna check that"
+	}
+}
+
+# get network data
+function getNetworkData {
+	{
+		ethInterface=$(nmcli device status | grep -m 1 eth)
+		ethPrivateIP=$(sudo ifconfig eth0 | grep -m 1 "inet" | cut -d' ' -f 10)
+		wlanInterface=$(nmcli device status | grep -m 1 wlan)
+		wlanPrivateIP=$(sudo ifconfig wlan0 | grep -m 1 "inet" | cut -d' ' -f 10)
+		publicIP=$(curl -s http://ident.me)
+	} || {
+		echo "You probably don't have nmcli or installed"
+	}
+}
 
 # get other data
 function getMusicData {
 	{
-		player=$(playerctl -l 2>/dev/null) &&
+		player=$(playerctl -l 2>/dev/null)
 		author=$(playerctl -p $player metadata xesam:albumArtist 2>/dev/null)
 		song=$(playerctl -p $player metadata xesam:title 2>/dev/null)
 		album=$(playerctl -p $player metadata xesam:album 2>/dev/null)
@@ -35,21 +75,42 @@ function getMusicData {
 	}
 }
 
+# function call
+getHardware
+getHostnameEssentials
+getNetworkData
 getMusicData
 
-printf "
-\e[34m user    \e[0m%s
-\e[34m host    \e[0m%s
-\e[34m OS      \e[0m%s
-\e[34m Kernel  \e[0m%s
-\e[34m Shell   \e[0m%s
-\e[34m Arch    \e[0m%s
-\e[34m Disk    \e[0m%s
-\e[34m ------  \e[0m%s
-\e[34m Audio   \e[0m%s
-\e[34m Author  \e[0m%s
-\e[34m Album   \e[0m%s
-\e[34m Song    \e[0m%s
-\e[34m ------  \e[0m%s
-\e[34m /  \e[0m%s\n\n" \
-"${rootuser}" "${host}" "${os}" "${kernel}" "${term}" "${arch}" "${space}" "" "${player}" "${author}" "${album}" "${song}" "${date}"
+	printf "
+	\e[34m user     \e[0m%s
+	\e[34m ------   \e[0m%s
+	\e[34m host     \e[0m%s
+	\e[34m OS       \e[0m%s
+	\e[34m Kernel   \e[0m%s
+	\e[34m Shell    \e[0m%s
+	\e[34m Arch     \e[0m%s
+	\e[34m Disk     \e[0m%s
+	\e[34m Space    \e[0m%s
+	\e[34m Temp     \e[0m%s
+	\e[34m RAM      \e[0m%s
+	\e[34m GPU      \e[0m%s
+	\e[34m CPU      \e[0m%s
+	\e[34m Cores    \e[0m%s
+	\e[34m Temp    \e[0m%s
+	\e[34m ------   \e[0m%s
+        \e[34m Audio    \e[0m%s
+        \e[34m Author   \e[0m%s
+        \e[34m Album    \e[0m%s
+        \e[34m Song     \e[0m%s
+        \e[34m ------   \e[0m%s
+        \e[34m Date     \e[0m%s
+        \e[34m ------   \e[0m%s
+        \e[34m Uptime   \e[0m%s
+        \e[34m ------   \e[0m%s
+        \e[34m \e[0m%s
+        \e[34m \e[0m%s
+        \e[34m eth IP   \e[0m%s
+        \e[34m wlan IP  \e[0m%s
+        \e[34m Public   \e[0m%s
+	\e[34m /  \e[0m%s\n\n" \
+	"${rootuser}" "" "${host}" "${os}" "${kernel}" "${term}" "${arch}" "${disk:0:10}" "${space}" "${disktmp}" "(${ram:14:5}/${ram:26:5})" "${gpu}" "${cpu}" "${cpuCores}" "${cpucoreTmp}" "" "${player}" "${author}" "${album}" "${song}" "" "${date}" "" "${ttl}" "" "${ethInterface}" "${wlanInterface}" "${ethPrivateIP}" "${wlanPrivateIP}" "${publicIP}"
