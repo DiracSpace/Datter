@@ -19,6 +19,8 @@ Just type the following:
 * Obviously, you need `bash`
 * `coreutils`
 * `playerctl`
+* `hddtemp`
+* `nmcli`
 
 # Snapshots
 <p align="center">
