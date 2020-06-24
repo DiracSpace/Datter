@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
 cat << "EOF"
-	    o                               
-	    O                                
-	    o          O    O                
-	    o         oOo  oOo               
-	.oOoO  .oOoO'  o    o   .oOo. `OoOo. 
-	o   O  O   o   O    O   OooO'  o     
-	O   o  o   O   o    o   O      O     
-	`OoO'o `OoO'o  `oO  `oO `OoO'  o   
+		    o                               
+		    O                                
+		    o          O    O                
+		    o         oOo  oOo               
+		.oOoO  .oOoO'  o    o   .oOo. `OoOo. 
+		o   O  O   o   O    O   OooO'  o     
+		O   o  o   O   o    o   O      O     
+		`OoO'o `OoO'o  `oO  `oO `OoO'  o   
 
 EOF
 
@@ -28,13 +28,14 @@ function getHardware {
 		cpu=$(cat /proc/cpuinfo | grep -m 1 "model name" | sed 's/^.*: //')
 		cpuCores=$(cat /proc/cpuinfo | grep processor | wc -l)
 		cpucoreTmp=$(echo $(paste <(cat /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp) | column -s $'\t' -t | sed 's/\(.\)..$/.\1°C/') | tr '\n' '\t')
+		diskname=$(sudo hddtemp /dev/sda7 | grep -o -P '(:).*(:)')
 		disk=$(df -h --output=source,fstype,size,used,avail,pcent,target -x tmpfs -x devtmpfs | grep -m 1 /)
 		space=$(df -h | awk '/\/$/ {print $3 "/" $2 " (" $5 ")"}')
 		disktmp=$(sudo hddtemp /dev/sda | sed 's/^.*: //')
 		ram=$(free -h | grep -m 1 Mem)
                 term=$(basename "${SHELL}")
 	} || {
-		echo "Possible error with dependencies or routes, look it up in the source file"
+		echo "Possible error with dependencies or routes, look it up in the source file" | sed 's/^/\t\t/'
 	}
 }
 
@@ -46,20 +47,20 @@ function getHostnameEssentials {
 		os=$(hostnamectl | grep Operating | sed 's/^.*: //')
 		kernel=$(hostnamectl | grep Kernel | sed 's/^.*: //')
 	} || {
-		echo "Error with hostnamectl, might wanna check that"
+		echo "Error with hostnamectl, might wanna check that" | sed 's/^/\t\t/'
 	}
 }
 
 # get network data
 function getNetworkData {
 	{
-		ethInterface=$(nmcli device status | grep '^eth[[:digit:]]')
+		ethInterface=$(nmcli device status | grep '^eth[[:digit:]]' | sed 's/^/\t\t/')
 		ethPrivateIP=$(sudo ifconfig eth0 | grep -m 1 "inet" | cut -d' ' -f 10)
-		wlanInterface=$(nmcli device status | grep '^wlan[[:digit:]]')
+		wlanInterface=$(nmcli device status | grep '^wlan[[:digit:]]' | sed 's/^/\t\t/')
 		wlanPrivateIP=$(sudo ifconfig wlan0 | grep -m 1 "inet" | cut -d' ' -f 10)
 		publicIP=$(curl -s http://ident.me)
 	} || {
-		echo "You probably don't have nmcli or installed"
+		echo "You probably don't have nmcli or installed" | sed 's/^/\t\t/'
 	}
 }
 
@@ -71,7 +72,7 @@ function getMusicData {
 		song=$(playerctl -p spotify metadata xesam:title 2>/dev/null)
 		album=$(playerctl -p spotify metadata xesam:album 2>/dev/null)
 	} || {
-		echo "Did not find a compatible player, sorry"
+		echo "Did not find a compatible player, sorry" | sed 's/^/\t\t/'
 	}
 }
 
@@ -82,30 +83,37 @@ getNetworkData
 getMusicData
 
 cat << EOF
-${rootuser}
-${host}
-${os}
-${kernel}
-${term}
-${arch}
-${disk:0:10}
-${space}
-${disktmp}
-${ram:26:5})"/"${ram:14:5}
-${gpu}
-${cpu}
-${cpuCores}
-${cpucoreTmp}
-${player}
-${author}
-${album}
-${song}
-${date}
-${ttl}
-${ethInterface}
+		Date	${date}
+		User    ${rootuser}
+		Host	${host}
+		Uptime	${ttl}
+		IP	${publicIP}
+		--------------------------------
+		OS      ${os}
+		Kernel  ${kernel}
+		Shell   ${term}
+		Arch	${arch}
+		--------------------------------
+		Name	${diskname}
+		Disk	${disk:0:10}
+		Space	${space}
+		Temp	${disktmp}
+		RAM	${ram:26:5}/${ram:14:5}
+		-------------------------------
+		GPU	${gpu}
+		CPU	${cpu}
+		Cores	${cpuCores}
+		Temp	${cpucoreTemp}
+		-------------------------------
+		Player	${player}
+		Author	${author}
+		Album	${album}
+		Song	${song}
+		-------------------------------
+		Wlan Interfaces
 ${wlanInterface}
-${ethPrivateIP}
-${wlanPrivateIP}
-${publicIP}
+		IP	${wlanPrivateIP}
+		Ethernet Interfaces
+${ethInterface}
+		IP	${ethPrivateIP}
 EOF
-
