@@ -24,5 +24,5 @@ Just type the following:
 
 # Snapshots
 <p align="center">
-  <img src="https://github.com/DiracSpace/Datter/blob/master/screenshots/datter-v0.0.2.png">
+  <img src="https://github.com/DiracSpace/Datter/blob/master/screenshots/datter-v0.0.3-patch02.png">
 </p>
