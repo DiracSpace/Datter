@@ -34,7 +34,7 @@ function getHardware {
 		ram=$(free -h | grep -m 1 Mem)
                 term=$(basename "${SHELL}")
 	} || {
-		echo "Possible error with dependencies. please check if all of them are installed"
+		echo "Possible error with dependencies or routes, look it up in the source file"
 	}
 }
 
@@ -53,9 +53,9 @@ function getHostnameEssentials {
 # get network data
 function getNetworkData {
 	{
-		ethInterface=$(nmcli device status | grep -m 1 eth)
+		ethInterface=$(nmcli device status | grep '^eth[[:digit:]]')
 		ethPrivateIP=$(sudo ifconfig eth0 | grep -m 1 "inet" | cut -d' ' -f 10)
-		wlanInterface=$(nmcli device status | grep -m 1 wlan)
+		wlanInterface=$(nmcli device status | grep '^wlan[[:digit:]]')
 		wlanPrivateIP=$(sudo ifconfig wlan0 | grep -m 1 "inet" | cut -d' ' -f 10)
 		publicIP=$(curl -s http://ident.me)
 	} || {
@@ -66,6 +66,7 @@ function getNetworkData {
 # get other data
 function getMusicData {
 	{
+		player=$(playerctl -l 2>/dev/null)
 		author=$(playerctl -p spotify metadata xesam:albumArtist 2>/dev/null)
 		song=$(playerctl -p spotify metadata xesam:title 2>/dev/null)
 		album=$(playerctl -p spotify metadata xesam:album 2>/dev/null)
@@ -80,36 +81,31 @@ getHostnameEssentials
 getNetworkData
 getMusicData
 
-	printf "
-	\e[34m user     \e[0m%s
-	\e[34m ------   \e[0m%s
-	\e[34m host     \e[0m%s
-	\e[34m OS       \e[0m%s
-	\e[34m Kernel   \e[0m%s
-	\e[34m Shell    \e[0m%s
-	\e[34m Arch     \e[0m%s
-	\e[34m Disk     \e[0m%s
-	\e[34m Space    \e[0m%s
-	\e[34m Temp     \e[0m%s
-	\e[34m RAM      \e[0m%s
-	\e[34m GPU      \e[0m%s
-	\e[34m CPU      \e[0m%s
-	\e[34m Cores    \e[0m%s
-	\e[34m Temp    \e[0m%s
-	\e[34m ------   \e[0m%s
-        \e[34m Audio    \e[0m%s
-        \e[34m Author   \e[0m%s
-        \e[34m Album    \e[0m%s
-        \e[34m Song     \e[0m%s
-        \e[34m ------   \e[0m%s
-        \e[34m Date     \e[0m%s
-        \e[34m ------   \e[0m%s
-        \e[34m Uptime   \e[0m%s
-        \e[34m ------   \e[0m%s
-        \e[34m \e[0m%s
-        \e[34m \e[0m%s
-        \e[34m eth IP   \e[0m%s
-        \e[34m wlan IP  \e[0m%s
-        \e[34m Public   \e[0m%s
-	\e[34m /  \e[0m%s\n\n" \
-	"${rootuser}" "" "${host}" "${os}" "${kernel}" "${term}" "${arch}" "${disk:0:10}" "${space}" "${disktmp}" "(${ram:14:5}/${ram:26:5})" "${gpu}" "${cpu}" "${cpuCores}" "${cpucoreTmp}" "" "${player}" "${author}" "${album}" "${song}" "" "${date}" "" "${ttl}" "" "${ethInterface}" "${wlanInterface}" "${ethPrivateIP}" "${wlanPrivateIP}" "${publicIP}"
+cat << EOF
+${rootuser}
+${host}
+${os}
+${kernel}
+${term}
+${arch}
+${disk:0:10}
+${space}
+${disktmp}
+${ram:26:5})"/"${ram:14:5}
+${gpu}
+${cpu}
+${cpuCores}
+${cpucoreTmp}
+${player}
+${author}
+${album}
+${song}
+${date}
+${ttl}
+${ethInterface}
+${wlanInterface}
+${ethPrivateIP}
+${wlanPrivateIP}
+${publicIP}
+EOF
+
