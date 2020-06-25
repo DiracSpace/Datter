@@ -21,19 +21,31 @@ rootuser=$(who | awk '!seen[$1]++ {print $1}')
 # get uptime
 ttl=$(uptime -p)
 
+# get window manager data
+function getPersonalization {
+	{
+		wm=$(wmctrl -m | grep "Name" | sed 's/^.*: //')
+	} || {
+		echo "wmctrl not installed, trying variables"
+		wm=$(echo $GDMSESSION)
+	}
+}
+
 # get hardware data
 function getHardware {
 	{
 		gpu=$(lspci | grep VGA | sed 's/^.*: //')
 		cpu=$(cat /proc/cpuinfo | grep -m 1 "model name" | sed 's/^.*: //')
+		virtualization=$(lscpu | grep -m 1 "Virtualization" | sed 's/^.*: //' | sed "s/ //g")
 		cpuCores=$(cat /proc/cpuinfo | grep processor | wc -l)
-		cpucoreTmp=$(echo $(paste <(cat /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp) | column -s $'\t' -t | sed 's/\(.\)..$/.\1°C/') | tr '\n' '\t')
+		cpucoreTmp=$(echo $(paste <(cat /sys/class/thermal/thermal_zone*/type) <(cat /sys/class/thermal/thermal_zone*/temp) | column -s $'\t' -t | sed 's/\(.\)..$/.\1°C/'))
 		diskname=$(sudo hddtemp /dev/sda7 | grep -o -P '(:).*(:)')
 		disk=$(df -h --output=source,fstype,size,used,avail,pcent,target -x tmpfs -x devtmpfs | grep -m 1 /)
 		space=$(df -h | awk '/\/$/ {print $3 "/" $2 " (" $5 ")"}')
 		disktmp=$(sudo hddtemp /dev/sda | sed 's/^.*: //')
 		ram=$(free -h | grep -m 1 Mem)
                 term=$(basename "${SHELL}")
+		resolution=$(xdpyinfo | awk '/dimensions/{print $2}')
 	} || {
 		echo "Possible error with dependencies or routes, look it up in the source file" | sed 's/^/\t\t/'
 	}
@@ -43,7 +55,7 @@ function getHardware {
 function getHostnameEssentials {
 	{
 		host=$(hostname)
-		arch=$(hostnamectl | grep Architecture | sed 's/^.*: //')
+		arch=$(lscpu | grep -m 1 "Architecture" | sed 's/^.*: //' | sed "s/ //g")
 		os=$(hostnamectl | grep Operating | sed 's/^.*: //')
 		kernel=$(hostnamectl | grep Kernel | sed 's/^.*: //')
 	} || {
@@ -77,12 +89,14 @@ function getMusicData {
 }
 
 # function call
+getPersonalization
 getHardware
 getHostnameEssentials
 getNetworkData
 getMusicData
 
 cat << EOF
+
 		Date	${date}
 		User    ${rootuser}
 		Host	${host}
@@ -93,6 +107,8 @@ cat << EOF
 		Kernel  ${kernel}
 		Shell   ${term}
 		Arch	${arch}
+		Screen	${resolution}
+		wm	${wm}
 		--------------------------------
 		Name	${diskname}
 		Disk	${disk:0:10}
@@ -103,7 +119,8 @@ cat << EOF
 		GPU	${gpu}
 		CPU	${cpu}
 		Cores	${cpuCores}
-		Temp	${cpucoreTemp}
+		Temp	${cpucoreTmp}
+		Virt	${virtualization}
 		-------------------------------
 		Player	${player}
 		Author	${author}
